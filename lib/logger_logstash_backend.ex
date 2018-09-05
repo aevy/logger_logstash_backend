@@ -60,7 +60,6 @@ defmodule LoggerLogstashBackend do
     }
   ) do
     fields = md
-             |> Keyword.merge(metadata)
              |> Enum.into(%{})
              |> Map.put(:level, to_string(level))
              |> inspect_pids
@@ -70,12 +69,13 @@ defmodule LoggerLogstashBackend do
       year, month, day, hour, minute, second, (milliseconds * 1000)
     )
     ts = Timex.to_datetime ts, Timezone.local
-    {:ok, json} = JSX.encode %{
+    payload = metadata |> Enum.into(%{
       type: type,
       "@timestamp": Timex.format!(ts, "{ISO:Extended}"),
       message: to_string(msg),
       fields: fields
-    }
+    })
+    {:ok, json} = JSX.encode(payload)
     :gen_udp.send socket, host, port, json
   end
 
