@@ -55,6 +55,7 @@ defmodule LoggerLogstashBackend do
       host: host,
       port: port,
       type: type,
+      root_fields: root_fields,
       metadata: metadata,
       socket: socket
     }
@@ -69,7 +70,8 @@ defmodule LoggerLogstashBackend do
       year, month, day, hour, minute, second, (milliseconds * 1000)
     )
     ts = Timex.to_datetime ts, Timezone.local
-    payload = metadata |> Enum.into(%{
+    additional_fields = Keyword.take(md, root_fields) ++ metadata
+    payload = additional_fields |> Enum.into(%{
       type: type,
       "@timestamp": Timex.format!(ts, "{ISO:Extended}"),
       message: to_string(msg),
@@ -86,6 +88,7 @@ defmodule LoggerLogstashBackend do
 
     level = Keyword.get opts, :level, :debug
     metadata = Keyword.get opts, :metadata, []
+    root_fields = Keyword.get opts, :root_fields, []
     type = Keyword.get opts, :type, "elixir"
     host = Keyword.get opts, :host
     port = Keyword.get opts, :port
@@ -97,6 +100,7 @@ defmodule LoggerLogstashBackend do
       level: level,
       socket: socket,
       type: type,
+      root_fields: root_fields,
       metadata: metadata
     }
   end
